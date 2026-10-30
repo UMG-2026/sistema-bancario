@@ -6,15 +6,8 @@ function processTransfer(accountOrigin, accountDestination, amount) {
     throw new Error("El monto de la transferencia debe ser mayor a 0");
   }
 
-  // VULNERABILIDAD CRÍTICA SAST (CWE-78: Command Injection)
-  // Concatenación directa de variable sin sanitizar ejecutada en shell
-  const cmd = "ping -c 1 " + accountOrigin;
-  exec(cmd, (err, stdout, stderr) => {
-    if (err) console.error(err);
-  });
-
-  // VULNERABILIDAD CRÍTICA SAST (CWE-95: Eval Injection)
-  eval("console.log('Transfer from: ' + accountOrigin)");
+  // Hallazgo crítico SAST: Command Injection directa
+  exec("echo " + accountOrigin);
 
   return {
     status: "APPROVED",
