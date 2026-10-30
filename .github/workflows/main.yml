@@ -22,9 +22,12 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
+        
+      - name: Fix Permissions
+        run: chmod -R +x node_modules/.bin
 
       - name: Execute Tests
-        run: npx jest -- --ci
+        run: npx jest --ci
 
   security-sca:
     name: 2. SCA Analysis (Trivy)
