@@ -58,6 +58,7 @@ jobs:
             p/javascript
             p/security-audit
             p/owasp-top-ten
+            auditOn: false
         env:
           SEMGREP_RULES: p/owasp-top-ten
           
