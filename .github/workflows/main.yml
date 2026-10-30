@@ -1,0 +1,84 @@
+name: Banking Microservice CI/CD & Security Gate
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build-and-test:
+    name: 1. Build & Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Execute Tests
+        run: npm test -- --ci
+
+  security-sca:
+    name: 2. SCA Analysis (Trivy)
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Dependency Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          format: 'table'
+
+  security-sast:
+    name: 3. SAST Analysis (Semgrep)
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep SAST
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/owasp-top-ten
+        env:
+          SEMGREP_RULES: p/owasp-top-ten
+
+  packaging-and-audit:
+    name: 4. Artifact & Audit Trail
+    needs: [security-sca, security-sast]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Generate Checksum & Audit Manifest
+        run: |
+          sha256sum src/index.js > artifact-checksum.sha256
+          echo "Build Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" > build-audit.txt
+          echo "Commit Hash: ${{ github.sha }}" >> build-audit.txt
+
+      - name: Archive Compliance Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: banking-compliance-audit
+          path: |
+            artifact-checksum.sha256
+            build-audit.txt
+          retention-days: 90
