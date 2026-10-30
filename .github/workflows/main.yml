@@ -55,11 +55,12 @@ jobs:
         uses: returntocorp/semgrep-action@v1
         with:
           config: >-
+            p/javascript
             p/security-audit
             p/owasp-top-ten
         env:
           SEMGREP_RULES: p/owasp-top-ten
-
+          
   packaging-and-audit:
     name: 4. Artifact & Audit Trail
     needs: [security-sca, security-sast]
