@@ -24,7 +24,7 @@ jobs:
         run: npm install
 
       - name: Execute Tests
-        run: npm test -- --ci
+        run: npx jest -- --ci
 
   security-sca:
     name: 2. SCA Analysis (Trivy)
